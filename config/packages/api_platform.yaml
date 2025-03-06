@@ -1,0 +1,13 @@
+api_platform:
+    title: Kosmoria API
+    description: API for Kosmoria application
+    version: 1.0.0
+    swagger:
+        api_keys:
+            JWT:
+                name: Authorization
+                type: header
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
