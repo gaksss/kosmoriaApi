@@ -2,13 +2,30 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Post;
+use App\DataPersister\UserDataPersister;
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[ApiResource(
+    operations: [
+        new Post(
+            uriTemplate: '/register',
+            denormalizationContext: ['groups' => ['user:write']],
+            validationContext: ['groups' => ['Default']],
+            security: "is_granted('PUBLIC_ACCESS')",
+            processor: UserDataPersister::class
+        )
+    ]
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -16,7 +33,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
+    #[ORM\Column(length: 180, unique: true)]
+    #[Groups(['user:write'])]
     private ?string $email = null;
 
     /**
@@ -29,7 +47,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Groups(['user:write'])]
     private ?string $password = null;
+
+    /**
+     * @var Collection<int, Marker>
+     */
+    #[ORM\OneToMany(targetEntity: Marker::class, mappedBy: 'createdBy')]
+    private Collection $markers;
+
+    public function __construct()
+    {
+        $this->markers = new ArrayCollection();
+    }
+
+
+
+
 
     public function getId(): ?int
     {
@@ -104,5 +138,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection<int, Marker>
+     */
+    public function getMarkers(): Collection
+    {
+        return $this->markers;
+    }
+
+    public function addMarker(Marker $marker): static
+    {
+        if (!$this->markers->contains($marker)) {
+            $this->markers->add($marker);
+            $marker->setCreatedBy($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMarker(Marker $marker): static
+    {
+        if ($this->markers->removeElement($marker)) {
+            // set the owning side to null (unless already changed)
+            if ($marker->getCreatedBy() === $this) {
+                $marker->setCreatedBy(null);
+            }
+        }
+
+        return $this;
     }
 }

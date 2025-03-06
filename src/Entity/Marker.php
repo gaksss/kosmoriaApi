@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Delete;
+use App\DataPersister\MarkerDataPersister;
 use App\Repository\MarkerRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -16,11 +17,29 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: MarkerRepository::class)]
 #[ApiResource(
     operations: [
-        new Get(normalizationContext: ['groups' => ['marker:read']]),
-        new GetCollection(normalizationContext: ['groups' => ['marker:read']]),
-        new Post(denormalizationContext: ['groups' => ['marker:write']]),
-        new Patch(denormalizationContext: ['groups' => ['marker:write']]),
-        new Delete(),
+        new Get(
+            normalizationContext: ['groups' => ['marker:read']],
+            security: "is_granted('PUBLIC_ACCESS')"
+        ),
+        new GetCollection(
+            normalizationContext: ['groups' => ['marker:read']],
+            security: "is_granted('PUBLIC_ACCESS')"
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['marker:write']],
+            security: "is_granted('ROLE_USER')",
+            processor: MarkerDataPersister::class,
+            securityMessage: "Seuls les utilisateurs connectés peuvent créer des livres"
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['marker:write']],
+            security: "is_granted('MARKER_EDIT', object)",
+            securityMessage: "Vous ne pouvez modifier que vos propres livres"
+        ),
+        new Delete(
+            security: "is_granted('MARKER_DELETE', object)",
+            securityMessage: "Vous ne pouvez supprimer que vos propres livres"
+        ),
     ]
 )]
 class Marker
@@ -46,6 +65,9 @@ class Marker
     #[ORM\ManyToOne(inversedBy: 'markers')]
     #[Groups(['marker:read', 'marker:write'])]
     private ?MarkerType $type = null;
+
+    #[ORM\ManyToOne(inversedBy: 'markers')]
+    private ?User $createdBy = null;
 
     public function getId(): ?int
     {
@@ -96,6 +118,18 @@ class Marker
     public function setType(?MarkerType $type): static
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(?User $createdBy): static
+    {
+        $this->createdBy = $createdBy;
 
         return $this;
     }
