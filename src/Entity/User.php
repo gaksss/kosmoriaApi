@@ -56,9 +56,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Marker::class, mappedBy: 'createdBy')]
     private Collection $markers;
 
+    #[ORM\Column(length: 255)]
+    private ?string $pseudo = null;
+
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    private ?Race $race = null;
+
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    private ?Hero $hero = null;
+
+    /**
+     * @var Collection<int, Score>
+     */
+    #[ORM\OneToMany(targetEntity: Score::class, mappedBy: 'user')]
+    private Collection $score;
+
     public function __construct()
     {
         $this->markers = new ArrayCollection();
+        $this->score = new ArrayCollection();
     }
 
 
@@ -164,6 +180,72 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($marker->getCreatedBy() === $this) {
                 $marker->setCreatedBy(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(string $pseudo): static
+    {
+        $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    public function getRace(): ?Race
+    {
+        return $this->race;
+    }
+
+    public function setRace(?Race $race): static
+    {
+        $this->race = $race;
+
+        return $this;
+    }
+
+    public function getHero(): ?Hero
+    {
+        return $this->hero;
+    }
+
+    public function setHero(?Hero $hero): static
+    {
+        $this->hero = $hero;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Score>
+     */
+    public function getScore(): Collection
+    {
+        return $this->score;
+    }
+
+    public function addScore(Score $score): static
+    {
+        if (!$this->score->contains($score)) {
+            $this->score->add($score);
+            $score->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeScore(Score $score): static
+    {
+        if ($this->score->removeElement($score)) {
+            // set the owning side to null (unless already changed)
+            if ($score->getUser() === $this) {
+                $score->setUser(null);
             }
         }
 
