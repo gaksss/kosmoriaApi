@@ -69,6 +69,9 @@ class Marker
     #[ORM\ManyToOne(inversedBy: 'markers')]
     private ?User $createdBy = null;
 
+    #[ORM\ManyToOne(inversedBy: 'marker')]
+    private ?Map $map = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -130,6 +133,18 @@ class Marker
     public function setCreatedBy(?User $createdBy): static
     {
         $this->createdBy = $createdBy;
+
+        return $this;
+    }
+
+    public function getMap(): ?Map
+    {
+        return $this->map;
+    }
+
+    public function setMap(?Map $map): static
+    {
+        $this->map = $map;
 
         return $this;
     }
