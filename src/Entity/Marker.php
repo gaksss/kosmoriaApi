@@ -29,16 +29,16 @@ use Symfony\Component\Serializer\Annotation\Groups;
             denormalizationContext: ['groups' => ['marker:write']],
             security: "is_granted('ROLE_USER')",
             processor: MarkerDataPersister::class,
-            securityMessage: "Seuls les utilisateurs connectés peuvent créer des livres"
+            securityMessage: "Seuls les utilisateurs connectés peuvent créer des marqueurs"
         ),
         new Patch(
             denormalizationContext: ['groups' => ['marker:write']],
             security: "is_granted('MARKER_EDIT', object)",
-            securityMessage: "Vous ne pouvez modifier que vos propres livres"
+            securityMessage: "Vous ne pouvez modifier que vos propres marqueurs"
         ),
         new Delete(
             security: "is_granted('MARKER_DELETE', object)",
-            securityMessage: "Vous ne pouvez supprimer que vos propres livres"
+            securityMessage: "Vous ne pouvez supprimer que vos propres marqueurs"
         ),
     ]
 )]

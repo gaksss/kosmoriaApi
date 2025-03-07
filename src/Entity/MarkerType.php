@@ -18,11 +18,28 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Entity(repositoryClass: MarkerRepository::class)]
 #[ApiResource(
     operations: [
-        new Get(normalizationContext: ['groups' => ['markerType:read']]),
-        new GetCollection(normalizationContext: ['groups' => ['markerType:read']]),
-        new Post(denormalizationContext: ['groups' => ['markerType:write']]),
-        new Patch(denormalizationContext: ['groups' => ['markerType:write']]),
-        new Delete(),
+        new Get(
+            normalizationContext: ['groups' => ['markerType:read']],
+            security: "is_granted('PUBLIC_ACCESS')"
+        ),
+        new GetCollection(
+            normalizationContext: ['groups' => ['markerType:read']],
+            security: "is_granted('PUBLIC_ACCESS')"
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['markerType:write']],
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les admins peuvent créer des types de marqueurs"
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['markerType:write']],
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les admins peuvent modifier des types de marqueurs"
+        ),
+        new Delete(
+            security: "is_granted('ROLE_ADMIN')",
+            securityMessage: "Seuls les admins peuvent supprimer des types de marqueurs"
+        ),
     ]
 )]
 class MarkerType
