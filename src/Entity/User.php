@@ -70,9 +70,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $pseudo = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
+    #[Groups(['user:write', 'user:read'])]
     private ?Race $race = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
+    #[Groups(['user:write', 'user:read'])]
     private ?Hero $hero = null;
 
     /**
